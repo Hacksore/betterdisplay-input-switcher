@@ -3,7 +3,7 @@ use log::debug;
 use nusb::hotplug::HotplugEvent;
 use std::{collections::HashMap, process::Command};
 
-pub const LOGI_USB_DEVICES: &str = "046d:c547";
+pub const LOGI_USB_DEVICE_ID: &str = "046d:c547";
 
 fn on_connect() {
   println!("Would switch input to the MacBook");
@@ -37,7 +37,7 @@ fn main() -> anyhow::Result<()> {
           let product = info.product_id();
           let device_str = format!("{:04x}:{:04x}", vendor, product);
 
-          if device_str == LOGI_USB_DEVICES {
+          if device_str == LOGI_USB_DEVICE_ID {
             debug!("Connected Logitech USB device: {}", device_str);
             on_connect();
           }
@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
           if let Some((vendor, product)) = devices.remove(&id) {
             let device_str = format!("{:04x}:{:04x}", vendor, product);
 
-            if device_str == LOGI_USB_DEVICES {
+            if device_str == LOGI_USB_DEVICE_ID {
               debug!("Disconnected Logitech USB device: {}", device_str);
               on_disconnect();
             }
