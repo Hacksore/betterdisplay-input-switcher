@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.99"
 chrono = "0.4"
 core-foundation = "0.9"
 core-foundation-sys = "0.8"
