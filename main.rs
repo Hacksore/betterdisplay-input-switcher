@@ -1,21 +1,24 @@
 use futures_lite::stream::StreamExt;
+use log::debug;
 use nusb::hotplug::HotplugEvent;
 use std::{collections::HashMap, process::Command};
 
 pub const LOGI_USB_DEVICES: &str = "046d:c547";
 
 fn on_connect() {
-  Command::new("betterdisplaycli")
-    .args(["set", "--ddc=15", "--vcp=inputSelect"])
-    .spawn()
-    .expect("failed to execute process");
+  println!("Would switch input to the MacBook");
+  // Command::new("betterdisplaycli")
+  //   .args(["set", "--ddc=15", "--vcp=inputSelect"])
+  //   .spawn()
+  //   .expect("failed to execute process");
 }
 
 fn on_disconnect() {
-  Command::new("betterdisplaycli")
-    .args(["set", "--ddc=18", "--vcp=inputSelect"])
-    .spawn()
-    .expect("failed to execute process");
+  println!("Would switch input to the Gaming PC");
+  // Command::new("betterdisplaycli")
+  //   .args(["set", "--ddc=18", "--vcp=inputSelect"])
+  //   .spawn()
+  //   .expect("failed to execute process");
 }
 
 
@@ -35,7 +38,7 @@ fn main() -> anyhow::Result<()> {
           let device_str = format!("{:04x}:{:04x}", vendor, product);
 
           if device_str == LOGI_USB_DEVICES {
-            println!("Connected Logitech USB device: {}", device_str);
+            debug!("Connected Logitech USB device: {}", device_str);
             on_connect();
           }
 
@@ -47,7 +50,7 @@ fn main() -> anyhow::Result<()> {
             let device_str = format!("{:04x}:{:04x}", vendor, product);
 
             if device_str == LOGI_USB_DEVICES {
-              println!("Disconnected Logitech USB device: {}", device_str);
+              debug!("Disconnected Logitech USB device: {}", device_str);
               on_disconnect();
             }
           }

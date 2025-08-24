@@ -98,6 +98,7 @@ dependencies = [
  "core-foundation-sys",
  "env_logger",
  "futures-lite",
+ "log",
  "nusb",
 ]
 
