@@ -1,25 +1,46 @@
-use futures_lite::stream;
+use futures_lite::stream::StreamExt;
 use nusb::hotplug::HotplugEvent;
+use std::collections::HashMap;
 
-pub const LOGI_USB_ID: &str = "4294994929";
+pub const LOGI_USB_DEVICES: &str = "046d:c547";
 
-// Device connected: 1133:50503 (Some("USB Receiver") - Some
-
-fn main() {
+fn main() -> anyhow::Result<()> {
     env_logger::init();
-    for event in stream::block_on(nusb::watch_devices().unwrap()) {
-        // TODO: match events over HotplugEvent::Connected and HotplugEvent::Disconnected
-        match event {
-            HotplugEvent::Connected(d) => {
-                let id = format!("{:?}", d.id());
-                let product = format!("{:?} - {:?}", d.product_string(), d.manufacturer_string());
-                println!("Device Connected: {} ({})", id, product);
-            }
-            HotplugEvent::Disconnected(d) => {
-                let id = format!("{:?}", d);
-                println!("Device Disconnected: {}", id);
+
+    futures_lite::future::block_on(async {
+        let mut events = nusb::watch_devices()?;
+        let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
+
+        while let Some(event) = events.next().await {
+            match event {
+                HotplugEvent::Connected(info) => {
+                    let id = info.id();
+                    let vendor = info.vendor_id();
+                    let product = info.product_id();
+
+                    println!(
+                        "Connected: {:04x}:{:04x}, {:?}",
+                        vendor, product, info.manufacturer_string()
+                    );
+
+                    // Cache vendor/product by DeviceId
+                    devices.insert(id, (vendor, product));
+                }
+                HotplugEvent::Disconnected(id) => {
+                    if let Some((vendor, product)) = devices.remove(&id) {
+                        println!(
+                            "Disconnected: {:04x}:{:04x} (id={:?})",
+                            vendor, product, id
+                        );
+                    } else {
+                        println!("Disconnected unknown device: {:?}", id);
+                    }
+                }
             }
         }
-    }
-}
 
+        Ok::<_, anyhow::Error>(())
+    })?;
+
+    Ok(())
+}
