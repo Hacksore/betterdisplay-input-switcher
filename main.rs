@@ -1,5 +1,6 @@
 use futures_lite::stream::StreamExt;
 use log::debug;
+use nusb::MaybeFuture;
 use nusb::hotplug::HotplugEvent;
 use std::{collections::HashMap, process::Command};
 
@@ -24,10 +25,20 @@ fn on_disconnect() {
 
 fn main() -> anyhow::Result<()> {
   env_logger::init();
+  let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
 
+  // we need to enumerate all devices and make sure they are cached
+  // otherwise we won't get disconnect events for devices that were
+  for info in nusb::list_devices().wait().unwrap() {
+    let id = info.id();
+    let vendor = info.vendor_id();
+    let product = info.product_id();
+    devices.insert(id, (vendor, product));
+  }
+
+  // NOTE: handle hotswapping when things plug/unplug
   futures_lite::future::block_on(async {
     let mut events = nusb::watch_devices()?;
-    let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
 
     while let Some(event) = events.next().await {
       match event {
