@@ -3,7 +3,8 @@ use log::debug;
 use nusb::hotplug::HotplugEvent;
 use std::{collections::HashMap, process::Command};
 
-pub const LOGI_USB_DEVICE_ID: &str = "046d:c547";
+// NOTE: this is my device used to trigger input switching
+pub const USB_DEVICE_ID: &str = "046d:c547";
 
 fn on_connect() {
   println!("switch input to the MacBook");
@@ -21,7 +22,6 @@ fn on_disconnect() {
     .expect("failed to execute process");
 }
 
-
 fn main() -> anyhow::Result<()> {
   env_logger::init();
 
@@ -37,7 +37,7 @@ fn main() -> anyhow::Result<()> {
           let product = info.product_id();
           let device_str = format!("{:04x}:{:04x}", vendor, product);
 
-          if device_str == LOGI_USB_DEVICE_ID {
+          if device_str == USB_DEVICE_ID {
             debug!("Connected Logitech USB device: {}", device_str);
             on_connect();
           }
@@ -49,10 +49,13 @@ fn main() -> anyhow::Result<()> {
           if let Some((vendor, product)) = devices.remove(&id) {
             let device_str = format!("{:04x}:{:04x}", vendor, product);
 
-            if device_str == LOGI_USB_DEVICE_ID {
+            if device_str == USB_DEVICE_ID {
               debug!("Disconnected Logitech USB device: {}", device_str);
               on_disconnect();
             }
+
+            // remove from cache since they will be cached on connect
+            devices.remove(&id);
           }
         }
       }
