@@ -6,19 +6,19 @@ use std::{collections::HashMap, process::Command};
 pub const LOGI_USB_DEVICE_ID: &str = "046d:c547";
 
 fn on_connect() {
-  println!("Would switch input to the MacBook");
-  // Command::new("betterdisplaycli")
-  //   .args(["set", "--ddc=15", "--vcp=inputSelect"])
-  //   .spawn()
-  //   .expect("failed to execute process");
+  println!("switch input to the MacBook");
+  Command::new("betterdisplaycli")
+    .args(["set", "--ddc=15", "--vcp=inputSelect"])
+    .spawn()
+    .expect("failed to execute process");
 }
 
 fn on_disconnect() {
-  println!("Would switch input to the Gaming PC");
-  // Command::new("betterdisplaycli")
-  //   .args(["set", "--ddc=18", "--vcp=inputSelect"])
-  //   .spawn()
-  //   .expect("failed to execute process");
+  println!("switch input to the Gaming PC");
+  Command::new("betterdisplaycli")
+    .args(["set", "--ddc=18", "--vcp=inputSelect"])
+    .spawn()
+    .expect("failed to execute process");
 }
 
 
