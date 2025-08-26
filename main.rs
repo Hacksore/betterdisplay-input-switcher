@@ -129,7 +129,7 @@ fn main() -> anyhow::Result<()> {
       .suffix("log"))
     .format_for_files(flexi_logger::detailed_format)
     .duplicate_to_stdout(Duplicate::All)
-    .duplicate_to_stderr(Duplicate::All)
+    .duplicate_to_stderr(Duplicate::Error)
     .format_for_stdout(flexi_logger::detailed_format)
     .write_mode(WriteMode::BufferAndFlush)
     .rotate(Criterion::Size(10_000_000), Naming::Timestamps, Cleanup::KeepLogFiles(7))
