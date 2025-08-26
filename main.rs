@@ -58,12 +58,12 @@ fn set_input(input_code: u16, use_ddc_alt: bool) {
 }
 
 fn on_connect(cfg: &ResolvedConfig) {
-  info!("switch input to the MacBook");
+  info!("switch input to the system_one_input");
   set_input(cfg.system_one_input, cfg.ddc_alt);
 }
 
 fn on_disconnect(cfg: &ResolvedConfig) {
-  info!("switch input to the Gaming PC");
+  info!("switch input to system_two_input");
   set_input(cfg.system_two_input, cfg.ddc_alt);
 }
 
@@ -99,12 +99,6 @@ fn main() -> anyhow::Result<()> {
   let mut logger = env_logger::Builder::from_env(env_logger::Env::default());
   let cfg = load_config()?;
 
-  if cfg.usb_device_id.is_empty() {
-    return Err(anyhow::anyhow!(
-      "USB device ID is not configured. Please set usb_device_id in the config file or BETTERDISPLAY_KVM__USB_DEVICE_ID environment variable."
-    ));
-  }
-
   let level = match cfg.log_level.to_lowercase().as_str() {
     "error" => log::LevelFilter::Error,
     "warn" | "warning" => log::LevelFilter::Warn,
@@ -118,8 +112,6 @@ fn main() -> anyhow::Result<()> {
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
   let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
 
-  // we need to enumerate all devices and make sure they are cached
-  // otherwise we won't get disconnect events for devices that were
   debug!("Enumerate all USB devices");
   for info in nusb::list_devices().wait().unwrap() {
     let id = info.id();
@@ -130,7 +122,7 @@ fn main() -> anyhow::Result<()> {
 
     debug!("Found USB device: {}", device_str);
 
-    // if we see the device on startup, switch input to MacBook
+    // if we see the device on startup, switch input to system_one_input
     if device_str == cfg.usb_device_id {
       set_input(cfg.system_one_input, cfg.ddc_alt);
     }
