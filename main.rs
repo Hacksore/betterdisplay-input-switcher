@@ -95,8 +95,10 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
 }
 
 fn main() -> anyhow::Result<()> {
-  // Initialize logging with configured level (env can still override)
-  let mut logger = env_logger::Builder::from_env(env_logger::Env::default());
+  // Initialize logging: default OFF, enable only for `betterdisplay_kvm` target
+  let mut logger = env_logger::Builder::from_env(
+    env_logger::Env::default().default_filter_or("off"),
+  );
   let cfg = load_config()?;
 
   let level = match cfg.log_level.to_lowercase().as_str() {
@@ -107,7 +109,10 @@ fn main() -> anyhow::Result<()> {
     "trace" => log::LevelFilter::Trace,
     _ => log::LevelFilter::Info,
   };
-  logger.filter_level(level).init();
+  logger
+    .filter_level(log::LevelFilter::Off)
+    .filter_module("betterdisplay-kvm", level)
+    .init();
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
   let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
