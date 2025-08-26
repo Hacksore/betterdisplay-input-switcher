@@ -18,11 +18,30 @@ Otherwise, do this.
 RUST_LOG="betterdisplay_kvm" cargo run
 ```
 
-### Install as a macOS Launch Agent
+### Installation
 
-You can run this in the background at login using a user LaunchAgent.
+#### Option 1: Use the Release Installer (Recommended)
 
-#### Automated install
+Download the latest `.pkg` from the releases page and run it. This will:
+- Install the binary to `/usr/local/libexec/betterdisplay-kvm/`
+- Install the LaunchAgent to `/Library/LaunchAgents/`
+- Automatically load and enable the service for your user account
+
+#### Option 2: Build from Source
+
+1) Build the installer package
+
+```sh
+scripts/build-pkg.sh
+```
+
+2) Run the generated installer from `dist/`
+
+This creates the same installation as the release installer.
+
+#### Option 3: Manual LaunchAgent Setup
+
+For development or custom setups, you can manually install the LaunchAgent:
 
 1) Build the binary
 
@@ -33,19 +52,21 @@ cargo build --release
 2) Install and load the LaunchAgent
 
 ```sh
-scripts/install-launch-agent.sh
+mkdir -p ~/Library/LaunchAgents
+sed "s#__BIN_PATH__#$(pwd)/target/release/betterdisplay-kvm#g" \
+  contrib/launch/com.github.hacksore.betterdisplay-kvm.plist \
+  > ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
+
+launchctl load -w ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
 ```
 
-This will:
-- Place a plist at `~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist`
-- Point it to your built binary
-- Load it with `launchctl`
+### Configuration
 
-Logs:
-- `~/Library/Logs/betterdisplay-kvm.out.log`
-- `~/Library/Logs/betterdisplay-kvm.err.log`
+Edit config at `~/.config/betterdisplay-kvm/config.toml`.
 
-To restart after changes:
+### Service Management
+
+To restart the service:
 
 ```sh
 launchctl unload -w ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
@@ -59,30 +80,9 @@ launchctl unload -w ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm
 rm ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
 ```
 
-#### Manual install
-
-1) Build the binary and find its absolute path
-
-```sh
-cargo build --release
-BIN_PATH="$(pwd)/target/release/betterdisplay-kvm"
-```
-
-2) Copy the template and set the binary path
-
-```sh
-mkdir -p ~/Library/LaunchAgents
-sed "s#__BIN_PATH__#${BIN_PATH}#g" contrib/launch/com.github.hacksore.betterdisplay-kvm.plist \
-  > ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
-```
-
-3) Load it
-
-```sh
-launchctl load -w ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
-```
-
-Tip: Edit config at `~/.config/betterdisplay-kvm/config.toml`.
+Logs are written to:
+- `~/Library/Logs/betterdisplay-kvm.out.log`
+- `~/Library/Logs/betterdisplay-kvm.err.log`
 
 ### Distribute as a macOS .pkg
 
