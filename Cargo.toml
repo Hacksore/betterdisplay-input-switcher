@@ -1,5 +1,5 @@
 [package]
-name = "betterdisplay-input-switcher"
+name = "betterdisplay-kvm"
 version = "0.1.0"
 edition = "2024"
 
@@ -14,5 +14,5 @@ log = "0.4.27"
 nusb = "0.2.0"
 
 [[bin]]
-name = "betterdisplay-input-switcher"
+name = "betterdisplay-kvm"
 path = "main.rs"

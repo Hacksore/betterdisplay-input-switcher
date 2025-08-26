@@ -1,5 +1,5 @@
 use futures_lite::stream::StreamExt;
-use log::debug;
+use log::{debug, info};
 use nusb::MaybeFuture;
 use nusb::hotplug::HotplugEvent;
 use std::{collections::HashMap, process::Command};
@@ -7,33 +7,55 @@ use std::{collections::HashMap, process::Command};
 // NOTE: this is my device used to trigger input switching
 pub const USB_DEVICE_ID: &str = "046d:c547";
 
-fn on_connect() {
-  println!("switch input to the MacBook");
+enum MonitorInput {
+  // THIS IS DisplayPort1
+  MacBook = 15,
+  // THIS IS HDMI2 
+  GamingPC = 18,
+}
+
+fn set_input(input: MonitorInput) {
   Command::new("betterdisplaycli")
-    .args(["set", "--ddc=15", "--vcp=inputSelect"])
+    .args([
+      "set",
+      &format!("--ddc={}", input as u16),
+      "--vcp=inputSelect",
+    ])
     .spawn()
     .expect("failed to execute process");
 }
 
+fn on_connect() {
+  info!("switch input to the MacBook");
+  set_input(MonitorInput::MacBook);
+}
+
 fn on_disconnect() {
-  println!("switch input to the Gaming PC");
-  Command::new("betterdisplaycli")
-    .args(["set", "--ddc=18", "--vcp=inputSelect"])
-    .spawn()
-    .expect("failed to execute process");
+  info!("switch input to the Gaming PC");
+  set_input(MonitorInput::GamingPC);
 }
 
 fn main() -> anyhow::Result<()> {
   env_logger::init();
+  debug!("Starting betterdisplay");
   let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
 
   // we need to enumerate all devices and make sure they are cached
   // otherwise we won't get disconnect events for devices that were
+  debug!("Enumerate all USB devices");
   for info in nusb::list_devices().wait().unwrap() {
     let id = info.id();
     let vendor = info.vendor_id();
     let product = info.product_id();
+    let device_str = format!("{:04x}:{:04x}", vendor, product);
     devices.insert(id, (vendor, product));
+
+    debug!("Found USB device: {}", device_str);
+
+    // if we see the device on startup, switch input to MacBook
+    if device_str == USB_DEVICE_ID {
+      set_input(MonitorInput::MacBook);
+    }
   }
 
   // NOTE: handle hotswapping when things plug/unplug
@@ -49,7 +71,7 @@ fn main() -> anyhow::Result<()> {
           let device_str = format!("{:04x}:{:04x}", vendor, product);
 
           if device_str == USB_DEVICE_ID {
-            debug!("Connected Logitech USB device: {}", device_str);
+            debug!("Connected to USB_DEVICE_ID device: {}", device_str);
             on_connect();
           }
 
@@ -61,12 +83,13 @@ fn main() -> anyhow::Result<()> {
             let device_str = format!("{:04x}:{:04x}", vendor, product);
 
             if device_str == USB_DEVICE_ID {
-              debug!("Disconnected Logitech USB device: {}", device_str);
+              debug!("Disconnected USB_DEVICE_ID USB device: {}", device_str);
               on_disconnect();
             }
 
             // remove from cache since they will be cached on connect
             devices.remove(&id);
+            debug!("Removed device from cache: {}", device_str);
           }
         }
       }
