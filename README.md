@@ -22,4 +22,5 @@ RUST_LOG="betterdisplay_kvm" cargo run
 - [ ] add a config system so others can use it
 - [ ] add some setup guide for adding a launch agent
 - [ ] publish it to crates.io so you can just install from there
+- [ ] flaky: fix bug where audio interface on mac might not go back to correct one
 - [ ] optimize for performance somehow so this doesnt waste cpu cycles

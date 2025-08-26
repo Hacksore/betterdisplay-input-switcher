@@ -7,6 +7,7 @@ use std::{collections::HashMap, process::Command};
 // NOTE: this is my device used to trigger input switching
 pub const USB_DEVICE_ID: &str = "046d:c547";
 
+// TOOD: this be configurable via something like a json or toml file
 enum MonitorInput {
   // THIS IS DisplayPort1
   MacBook = 15,
@@ -15,6 +16,7 @@ enum MonitorInput {
 }
 
 fn set_input(input: MonitorInput) {
+  // TODO: error handle if they don't have betterdisplaycli installed or on their PATH
   Command::new("betterdisplaycli")
     .args([
       "set",
@@ -52,6 +54,7 @@ fn main() -> anyhow::Result<()> {
 
     debug!("Found USB device: {}", device_str);
 
+    // TODO: is this working?
     // if we see the device on startup, switch input to MacBook
     if device_str == USB_DEVICE_ID {
       set_input(MonitorInput::MacBook);
