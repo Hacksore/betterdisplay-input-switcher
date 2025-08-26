@@ -74,14 +74,22 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
   config_path.push("betterdisplay-kvm");
   config_path.push("config.toml");
 
-  let builder = config::Config::builder()
-    .add_source(config::File::from(config_path).required(false))
-    .add_source(config::Environment::with_prefix("BETTERDISPLAY_KVM").separator("__"));
+  let builder =
+    config::Config::builder().add_source(config::File::from(config_path.clone()).required(false));
 
   let cfg: AppConfig = builder.build()?.try_deserialize()?;
 
-  // if the config file doesn't exist or is missing values, use defaults and write it out
-  fs::write(&config_path, toml::to_string_pretty(&cfg.with_defaults())?)?;
+  // If the config file does not exist, create the directory and write defaults
+  if !config_path.exists() {
+    if let Some(parent) = config_path.parent() {
+      if !parent.exists() {
+        fs::create_dir_all(parent)?;
+      }
+    }
+    let resolved = cfg.with_defaults();
+    fs::write(&config_path, toml::to_string_pretty(&resolved)?)?;
+    return Ok(resolved);
+  }
 
   Ok(cfg.with_defaults())
 }
