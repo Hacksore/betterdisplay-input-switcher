@@ -80,9 +80,18 @@ launchctl unload -w ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm
 rm ~/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist
 ```
 
-Logs are written to:
-- `~/Library/Logs/betterdisplay-kvm.out.log`
-- `~/Library/Logs/betterdisplay-kvm.err.log`
+Logs are written to rotating files under:
+- `~/Library/Logs/betterdisplay-kvm/`
+  - Filenames like `betterdisplay-kvm.rYYYY-MM-DD_HH-MM-SS.log`
+  - Keeps up to 7 files, rotates at ~10 MB
+  - Format includes timestamp, level, and message
+
+Control log level via config `~/.config/betterdisplay-kvm/config.toml` using `log_level`:
+
+```toml
+# one of: error, warn, info, debug, trace
+log_level = "info"
+```
 
 ### Distribute as a macOS .pkg
 

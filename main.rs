@@ -1,5 +1,6 @@
 use futures_lite::stream::StreamExt;
 use log::{debug, info};
+use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, Naming, WriteMode};
 use nusb::MaybeFuture;
 use nusb::hotplug::HotplugEvent;
 use serde::{Deserialize, Serialize};
@@ -95,24 +96,44 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
 }
 
 fn main() -> anyhow::Result<()> {
-  // Initialize logging: default OFF, enable only for `betterdisplay_kvm` target
-  let mut logger = env_logger::Builder::from_env(
-    env_logger::Env::default().default_filter_or("off"),
-  );
   let cfg = load_config()?;
 
-  let level = match cfg.log_level.to_lowercase().as_str() {
-    "error" => log::LevelFilter::Error,
-    "warn" | "warning" => log::LevelFilter::Warn,
-    "info" => log::LevelFilter::Info,
-    "debug" => log::LevelFilter::Debug,
-    "trace" => log::LevelFilter::Trace,
-    _ => log::LevelFilter::Info,
+  // Initialize file-based logging under ~/Library/Logs/betterdisplay-kvm
+  let mut logs_dir = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Failed to get home directory"))?;
+  logs_dir.push("Library");
+  logs_dir.push("Logs");
+  logs_dir.push("betterdisplay-kvm");
+
+  // Ensure log directory exists
+  if !logs_dir.exists() {
+    fs::create_dir_all(&logs_dir)?;
+  }
+
+  // Map config log level
+  let level_str = match cfg.log_level.to_lowercase().as_str() {
+    "error" => "error",
+    "warn" | "warning" => "warn",
+    "info" => "info",
+    "debug" => "debug",
+    "trace" => "trace",
+    _ => "info",
   };
-  logger
-    .filter_level(log::LevelFilter::Off)
-    .filter_module("betterdisplay-kvm", level)
-    .init();
+
+  // Only enable logs for this crate by default, others off
+  let spec = format!("off,betterdisplay_kvm={}", level_str);
+
+  Logger::try_with_str(spec)?
+    .log_to_file(FileSpec::default()
+      .directory(&logs_dir)
+      .basename("betterdisplay-kvm")
+      .suffix("log"))
+    .format_for_files(flexi_logger::detailed_format)
+    .duplicate_to_stdout(Duplicate::All)
+    .duplicate_to_stderr(Duplicate::All)
+    .format_for_stdout(flexi_logger::detailed_format)
+    .write_mode(WriteMode::BufferAndFlush)
+    .rotate(Criterion::Size(10_000_000), Naming::Timestamps, Cleanup::KeepLogFiles(7))
+    .start()?;
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
   let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();

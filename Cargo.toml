@@ -13,6 +13,7 @@ config = { version = "0.14", default-features = false, features = ["toml"] }
 serde = { version = "1.0", features = ["derive"] }
 dirs = "5"
 toml = "0.9.5"
+flexi_logger = "0.31"
 
 [[bin]]
 name = "betterdisplay-kvm"
