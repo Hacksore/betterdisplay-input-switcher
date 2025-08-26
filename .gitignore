@@ -3,3 +3,5 @@ hostapp/target
 # Added by cargo
 
 /target
+dist/
+pkg
