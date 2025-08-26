@@ -1,6 +1,9 @@
 #!/bin/sh
 set -euo pipefail
 
+echo "cleaning old build..."
+rm -rf pkg/ dist/ target/
+
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
 PKG_ROOT="$PROJECT_ROOT/pkg/root"
@@ -64,5 +67,3 @@ pkgbuild \
   "$PKG_PATH"
 
 echo "Done: $PKG_PATH"
-
-
