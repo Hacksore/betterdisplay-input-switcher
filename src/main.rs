@@ -10,9 +10,9 @@ use std::{collections::HashMap, fs, path::PathBuf, process::Command};
 struct AppConfig {
   /// The USB device id in the form "vvvv:pppp"
   usb_device_id: Option<String>,
-  /// DDC input code for computer 1 (e.g. 15)
+  /// DDC input code for system 1 (e.g. 15)
   system_one_input: Option<u16>,
-  /// DDC input code for computer 2 (e.g. 18)
+  /// DDC input code for system 2 (e.g. 18)
   system_two_input: Option<u16>,
   /// Log level: "error", "warn", "info", "debug", "trace"
   log_level: Option<String>,
