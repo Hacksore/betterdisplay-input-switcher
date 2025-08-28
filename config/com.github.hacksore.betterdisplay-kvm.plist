@@ -15,14 +15,6 @@
 
   <key>KeepAlive</key>
   <true/>
-
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>PATH</key>
-    <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
-    <key>RUST_LOG</key>
-    <string>debug</string>
-  </dict>
 </dict>
 </plist>
 

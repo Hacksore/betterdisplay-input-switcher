@@ -2,6 +2,23 @@
 
 A Rust-based KVM switch utility for BetterDisplay.
 
+
+## Config
+
+```toml
+# the USB device you'd like watch for
+usb_device_id = "046d:c547"
+# id that betterdisplaycli uses to configure input
+system_one_input = 15
+# id that betterdisplaycli uses to configure input
+system_two_input = 18
+# log level
+log_level = "debug"
+# if you use an lg monitor that doesnt follow the spec this might work if you enable it
+ddc_alt = false
+
+```
+
 ## Development
 
 ```
