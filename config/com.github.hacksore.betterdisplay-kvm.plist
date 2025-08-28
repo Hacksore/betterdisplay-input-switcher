@@ -19,15 +19,10 @@
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
     <key>RUST_LOG</key>
-    <string>info</string>
+    <string>debug</string>
   </dict>
-
-  <key>StandardOutPath</key>
-  <string>~/Library/Logs/betterdisplay-kvm.out.log</string>
-  <key>StandardErrorPath</key>
-  <string>~/Library/Logs/betterdisplay-kvm.err.log</string>
 </dict>
 </plist>
 
