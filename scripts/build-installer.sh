@@ -39,19 +39,45 @@ cat > "$SCRIPTS_DIR/postinstall" << 'EOS'
 #!/bin/sh
 set -e
 
-PLIST="/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist"
+echo "Installing betterdisplay-kvm LaunchAgent..."
 
-# Ensure correct permissions
-chown root:wheel "$PLIST" || true
-chmod 644 "$PLIST" || true
+SYSTEM_PLIST="/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist"
+
+# Ensure correct permissions on system plist
+chown root:wheel "$SYSTEM_PLIST" || true
+chmod 644 "$SYSTEM_PLIST" || true
 
 # Find current console user UID
 CONSOLE_UID=$(stat -f %u /dev/console 2>/dev/null || true)
 if [ -n "$CONSOLE_UID" ] && [ "$CONSOLE_UID" -gt 0 ]; then
-  # Unload if already loaded, then bootstrap and enable
-  launchctl bootout gui/$CONSOLE_UID "$PLIST" 2>/dev/null || true
-  launchctl bootstrap gui/$CONSOLE_UID "$PLIST" || true
-  launchctl enable gui/$CONSOLE_UID/com.github.hacksore.betterdisplay-kvm 2>/dev/null || true
+  echo "Setting up LaunchAgent for user $CONSOLE_UID..."
+  
+  # Get user home directory
+  USER_HOME=$(dscl . -read /Users/$(stat -f %Su /dev/console) NFSHomeDirectory | awk '{print $2}')
+  
+  if [ -n "$USER_HOME" ] && [ -d "$USER_HOME" ]; then
+    # Create user's LaunchAgents directory if it doesn't exist
+    USER_LAUNCHAGENTS="$USER_HOME/Library/LaunchAgents"
+    mkdir -p "$USER_LAUNCHAGENTS"
+    
+    # Copy the plist to user's LaunchAgents directory
+    USER_PLIST="$USER_LAUNCHAGENTS/com.github.hacksore.betterdisplay-kvm.plist"
+    cp "$SYSTEM_PLIST" "$USER_PLIST"
+    
+    # Set correct ownership for user's copy
+    chown "$CONSOLE_UID:staff" "$USER_PLIST"
+    chmod 644 "$USER_PLIST"
+    
+    # Unload if already loaded, then bootstrap and enable
+    launchctl bootout gui/$CONSOLE_UID "$USER_PLIST" 2>/dev/null || true
+    launchctl bootstrap gui/$CONSOLE_UID "$USER_PLIST" || true
+    launchctl enable gui/$CONSOLE_UID/com.github.hacksore.betterdisplay-kvm 2>/dev/null || true
+    echo "LaunchAgent installed and enabled successfully!"
+  else
+    echo "Warning: Could not determine user home directory, LaunchAgent will need to be loaded manually"
+  fi
+else
+  echo "Warning: Could not determine console user, LaunchAgent will need to be loaded manually"
 fi
 
 exit 0
@@ -64,6 +90,7 @@ pkgbuild \
   --scripts "$SCRIPTS_DIR" \
   --identifier "$IDENTIFIER" \
   --version "$VERSION" \
+  --nopayload \
   "$PKG_PATH"
 
 echo "Done: $PKG_PATH"
