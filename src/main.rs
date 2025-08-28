@@ -80,7 +80,6 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
 
   let cfg: AppConfig = builder.build()?.try_deserialize()?;
 
-  // If the config file does not exist, create the directory and write defaults
   if !config_path.exists() {
     if let Some(parent) = config_path.parent() {
       if !parent.exists() {
@@ -98,19 +97,16 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
 fn main() -> anyhow::Result<()> {
   let cfg = load_config()?;
 
-  // Initialize file-based logging under ~/Library/Logs/betterdisplay-kvm
   let mut logs_dir =
     dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Failed to get home directory"))?;
   logs_dir.push("Library");
   logs_dir.push("Logs");
   logs_dir.push("betterdisplay-kvm");
 
-  // Ensure log directory exists
   if !logs_dir.exists() {
     fs::create_dir_all(&logs_dir)?;
   }
 
-  // Map config log level
   let level_str = match cfg.log_level.to_lowercase().as_str() {
     "error" => "error",
     "warn" | "warning" => "warn",
@@ -120,7 +116,6 @@ fn main() -> anyhow::Result<()> {
     _ => "info",
   };
 
-  // Only enable logs for this crate by default, others off
   let spec = format!("off,betterdisplay_kvm={}", level_str);
 
   Logger::try_with_str(spec)?
@@ -155,13 +150,11 @@ fn main() -> anyhow::Result<()> {
 
     debug!("Found USB device: {}", device_str);
 
-    // if we see the device on startup, switch input to system_one_input
     if device_str == cfg.usb_device_id {
       set_input(cfg.system_one_input, cfg.ddc_alt);
     }
   }
 
-  // NOTE: handle hotswapping when things plug/unplug
   futures_lite::future::block_on(async {
     let mut events = nusb::watch_devices()?;
 
@@ -178,7 +171,6 @@ fn main() -> anyhow::Result<()> {
             on_connect(&cfg);
           }
 
-          // Cache vendor/product by DeviceId
           devices.insert(id, (vendor, product));
           debug!("Added device to cache: {}", device_str);
         }
@@ -191,7 +183,6 @@ fn main() -> anyhow::Result<()> {
               on_disconnect(&cfg);
             }
 
-            // remove from cache since they will be cached on connect
             devices.remove(&id);
             debug!("Removed device from cache: {}", device_str);
           }
