@@ -13,7 +13,7 @@ BUILD_BIN="target/release/${BIN_NAME}"
 LIBEXEC_DIR="/usr/local/libexec/${BIN_NAME}"
 INSTALL_BIN="${LIBEXEC_DIR}/${BIN_NAME}"
 USR_LOCAL_BIN="/usr/local/bin/${BIN_NAME}"
-PLIST_SRC="pkg/root/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist"
+PLIST_SRC="config/com.github.hacksore.betterdisplay-kvm.plist"
 PLIST_DEST="${HOME}/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist"
 
 echo "==> Installing ${BIN_NAME}"
