@@ -1,6 +1,6 @@
+use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, Naming, WriteMode};
 use futures_lite::stream::StreamExt;
 use log::{debug, info};
-use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, Naming, WriteMode};
 use nusb::MaybeFuture;
 use nusb::hotplug::HotplugEvent;
 use serde::{Deserialize, Serialize};
@@ -99,7 +99,8 @@ fn main() -> anyhow::Result<()> {
   let cfg = load_config()?;
 
   // Initialize file-based logging under ~/Library/Logs/betterdisplay-kvm
-  let mut logs_dir = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Failed to get home directory"))?;
+  let mut logs_dir =
+    dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Failed to get home directory"))?;
   logs_dir.push("Library");
   logs_dir.push("Logs");
   logs_dir.push("betterdisplay-kvm");
@@ -123,16 +124,22 @@ fn main() -> anyhow::Result<()> {
   let spec = format!("off,betterdisplay_kvm={}", level_str);
 
   Logger::try_with_str(spec)?
-    .log_to_file(FileSpec::default()
-      .directory(&logs_dir)
-      .basename("betterdisplay-kvm")
-      .suffix("log"))
+    .log_to_file(
+      FileSpec::default()
+        .directory(&logs_dir)
+        .basename("betterdisplay-kvm")
+        .suffix("log"),
+    )
     .format_for_files(flexi_logger::detailed_format)
     .duplicate_to_stdout(Duplicate::All)
     .duplicate_to_stderr(Duplicate::Error)
     .format_for_stdout(flexi_logger::detailed_format)
     .write_mode(WriteMode::BufferAndFlush)
-    .rotate(Criterion::Size(10_000_000), Naming::Timestamps, Cleanup::KeepLogFiles(7))
+    .rotate(
+      Criterion::Size(10_000_000),
+      Naming::Timestamps,
+      Cleanup::KeepLogFiles(7),
+    )
     .start()?;
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
@@ -173,6 +180,7 @@ fn main() -> anyhow::Result<()> {
 
           // Cache vendor/product by DeviceId
           devices.insert(id, (vendor, product));
+          debug!("Added device to cache: {}", device_str);
         }
         HotplugEvent::Disconnected(id) => {
           if let Some((vendor, product)) = devices.remove(&id) {
