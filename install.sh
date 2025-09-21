@@ -16,6 +16,9 @@ USR_LOCAL_BIN="/usr/local/bin/${BIN_NAME}"
 PLIST_SRC="config/com.github.hacksore.betterdisplay-kvm.plist"
 PLIST_DEST="${HOME}/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist"
 
+# building in release mode is recommended
+cargo build --release
+
 echo "==> Installing ${BIN_NAME}"
 
 if [[ ! -f "${BUILD_BIN}" ]]; then

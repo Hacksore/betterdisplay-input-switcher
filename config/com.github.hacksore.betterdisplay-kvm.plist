@@ -7,7 +7,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/local/libexec/betterdisplay-kvm/betterdisplay-kvm</string>
+    <string>/usr/local/bin/betterdisplay-kvm</string>
   </array>
 
   <key>RunAtLoad</key>
@@ -15,6 +15,13 @@
 
   <key>KeepAlive</key>
   <true/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>LOG_LEVEL</key>
+    <string>debug</string>
+  </dict>
+
 </dict>
 </plist>
 
