@@ -217,24 +217,22 @@ fn main() -> anyhow::Result<()> {
 
   debug!("Enumerate all USB devices");
   
-  let device_list = nusb::list_devices().wait()
-    .map_err(|e| {
-      error!("Failed to enumerate USB devices: {}", e);
-      anyhow::anyhow!("Failed to enumerate USB devices: {}", e)
-    })?;
+  let device_list: Vec<nusb::DeviceInfo> = nusb::list_devices().wait().unwrap().collect();
     
   for info in device_list {
     let id = info.id();
     let vendor = info.vendor_id();
     let product = info.product_id();
+    let manufacturer_name = info.manufacturer_string().unwrap_or("Unknown Manufacturer"); 
+    let device_name = info.product_string().unwrap_or("Unknown Product");
     let device_str = format!("{:04x}:{:04x}", vendor, product);
+
     devices.insert(id, (vendor, product));
 
-    debug!("Found USB device: {}", device_str);
+    debug!("{:?} {:?}: {}", manufacturer_name, device_name, device_str);
 
     if device_str == cfg.usb_device_id {
       if let Err(e) = set_input(cfg.system_one_input, cfg.ddc_alt) {
-        error!("Failed to set initial input: {}", e);
         error!("Failed to set initial input: {}", e);
       }
     }
