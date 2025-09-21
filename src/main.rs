@@ -217,7 +217,7 @@ fn main() -> anyhow::Result<()> {
 
   debug!("Enumerate all USB devices");
   
-  let device_list: Vec<nusb::DeviceInfo> = nusb::list_devices().wait().unwrap().collect();
+  let device_list: Vec<nusb::DeviceInfo> = nusb::list_devices().wait()?.collect();
     
   for info in device_list {
     let id = info.id();
