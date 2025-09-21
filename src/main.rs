@@ -143,20 +143,13 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
 }
 
 fn main() -> anyhow::Result<()> {
-  // Set up panic hook to capture panics and log them
-  panic::set_hook(Box::new(|panic_info| {
-    eprintln!("PANIC: {}", panic_info);
-    if let Some(location) = panic_info.location() {
-      eprintln!("Location: {}:{}:{}", location.file(), location.line(), location.column());
-    }
-    if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
-      eprintln!("Message: {}", s);
-    } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
-      eprintln!("Message: {}", s);
-    }
-  }));
+  // Load config first to get the log level
+  let cfg = load_config().map_err(|e| {
+    eprintln!("Failed to load config: {}", e);
+    e
+  })?;
 
-  // Set up basic logger first with default level
+  // Set up logger with the proper log level from config
   let mut logs_dir =
     dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Failed to get home directory"))?;
   logs_dir.push("Library");
@@ -167,35 +160,6 @@ fn main() -> anyhow::Result<()> {
     fs::create_dir_all(&logs_dir)?;
   }
 
-  // Start with basic logger using default level
-  Logger::try_with_str("off,betterdisplay_kvm=info")?
-    .log_to_file(
-      FileSpec::default()
-        .directory(&logs_dir)
-        .basename("betterdisplay-kvm")
-        .suffix("log"),
-    )
-    .format_for_files(flexi_logger::detailed_format)
-    .duplicate_to_stdout(Duplicate::All)
-    .duplicate_to_stderr(Duplicate::Error)
-    .format_for_stdout(flexi_logger::detailed_format)
-    .write_mode(WriteMode::BufferAndFlush)
-    .rotate(
-      Criterion::Size(10_000_000),
-      Naming::Timestamps,
-      Cleanup::KeepLogFiles(7),
-    )
-    .start()?;
-
-  info!("betterdisplay-kvm starting...");
-  
-  // Load config to get the proper log level
-  let cfg = load_config().map_err(|e| {
-    error!("Failed to load config: {}", e);
-    e
-  })?;
-
-  // Reconfigure logger with the proper log level from config
   let level_str = match cfg.log_level.to_lowercase().as_str() {
     "error" => "error",
     "warn" | "warning" => "warn",
@@ -206,8 +170,7 @@ fn main() -> anyhow::Result<()> {
   };
 
   let spec = format!("off,betterdisplay_kvm={}", level_str);
-  
-  // Restart logger with proper level
+
   Logger::try_with_str(spec)?
     .log_to_file(
       FileSpec::default()
@@ -226,6 +189,21 @@ fn main() -> anyhow::Result<()> {
       Cleanup::KeepLogFiles(7),
     )
     .start()?;
+
+  // Set up panic hook to capture panics and log them
+  panic::set_hook(Box::new(|panic_info| {
+    error!("PANIC: {}", panic_info);
+    if let Some(location) = panic_info.location() {
+      error!("Location: {}:{}:{}", location.file(), location.line(), location.column());
+    }
+    if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+      error!("Message: {}", s);
+    } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+      error!("Message: {}", s);
+    }
+  }));
+
+  info!("betterdisplay-kvm starting...");
 
   // Now validate environment with proper logging
   validate_environment().map_err(|e| {
