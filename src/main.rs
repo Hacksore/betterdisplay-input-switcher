@@ -6,6 +6,8 @@ use nusb::hotplug::HotplugEvent;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs, path::PathBuf, process::Command};
 
+pub const DEFAULT_DEVICE_ID: &str = "046d:c547";
+
 #[derive(Debug, Serialize, Deserialize)]
 struct AppConfig {
   /// The USB device id in the form "vvvv:pppp"
@@ -25,7 +27,7 @@ impl AppConfig {
     ResolvedConfig {
       usb_device_id: self
         .usb_device_id
-        .unwrap_or_else(|| "046d:c547".to_string()),
+        .unwrap_or_else(|| DEFAULT_DEVICE_ID.to_string()),
       system_one_input: self.system_one_input.unwrap_or(15),
       system_two_input: self.system_two_input.unwrap_or(18),
       log_level: self.log_level.unwrap_or_else(|| "info".to_string()),
