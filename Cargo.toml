@@ -1,7 +1,11 @@
 [package]
 name = "betterdisplay-kvm"
+description = "A KVM switch for BetterDisplay"
+license = "MIT"
 version = "0.0.1"
 edition = "2024"
+readme = "README.md"
+repository = "https://github.com/Hacksore/betterdisplay-kvm"
 
 [dependencies]
 anyhow = "1.0.99"
