@@ -1,10 +1,10 @@
 use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, Naming, WriteMode};
 use futures_lite::stream::StreamExt;
-use log::{debug, info, error};
+use log::{debug, error, info};
 use nusb::MaybeFuture;
 use nusb::hotplug::HotplugEvent;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs, path::PathBuf, process::Command, panic};
+use std::{collections::HashMap, fs, panic, path::PathBuf, process::Command};
 
 pub const DEFAULT_DEVICE_ID: &str = "046d:c547";
 
@@ -46,7 +46,7 @@ struct ResolvedConfig {
 }
 
 fn set_input(input_code: u16, use_ddc_alt: bool) -> anyhow::Result<()> {
-  let mut cmd = Command::new("betterdisplaycli");
+  let mut cmd = Command::new("/opt/homebrew/bin/betterdisplaycli");
   cmd.arg("set");
   if use_ddc_alt {
     cmd.arg("--ddcAlt");
@@ -55,19 +55,24 @@ fn set_input(input_code: u16, use_ddc_alt: bool) -> anyhow::Result<()> {
     format!("--ddc={}", input_code),
     "--vcp=inputSelect".to_string(),
   ]);
-  
+
   debug!("Executing betterdisplaycli command: {:?}", cmd);
-  
-  let mut child = cmd.spawn()
+
+  let mut child = cmd
+    .spawn()
     .map_err(|e| anyhow::anyhow!("Failed to execute betterdisplaycli process: {}", e))?;
-  
-  let status = child.wait()
+
+  let status = child
+    .wait()
     .map_err(|e| anyhow::anyhow!("Failed to wait for betterdisplaycli process: {}", e))?;
-  
+
   if !status.success() {
-    return Err(anyhow::anyhow!("betterdisplaycli exited with status: {}", status));
+    return Err(anyhow::anyhow!(
+      "betterdisplaycli exited with status: {}",
+      status
+    ));
   }
-  
+
   debug!("Successfully executed betterdisplaycli command");
   Ok(())
 }
@@ -88,16 +93,17 @@ fn on_disconnect(cfg: &ResolvedConfig) {
 
 fn validate_environment() -> anyhow::Result<()> {
   debug!("Validating environment...");
-  
+
   // Check if betterdisplaycli is available
-  let output = Command::new("which")
-    .arg("betterdisplaycli")
-    .output();
-    
+  let output = Command::new("which").arg("betterdisplaycli").output();
+
   match output {
     Ok(result) => {
       if result.status.success() {
-        debug!("betterdisplaycli found at: {}", String::from_utf8_lossy(&result.stdout).trim());
+        debug!(
+          "betterdisplaycli found at: {}",
+          String::from_utf8_lossy(&result.stdout).trim()
+        );
       } else {
         error!("betterdisplaycli not found in PATH");
         return Err(anyhow::anyhow!("betterdisplaycli not found in PATH"));
@@ -105,10 +111,13 @@ fn validate_environment() -> anyhow::Result<()> {
     }
     Err(e) => {
       error!("Failed to check for betterdisplaycli: {}", e);
-      return Err(anyhow::anyhow!("Failed to check for betterdisplaycli: {}", e));
+      return Err(anyhow::anyhow!(
+        "Failed to check for betterdisplaycli: {}",
+        e
+      ));
     }
   }
-  
+
   debug!("Environment validation completed");
   Ok(())
 }
@@ -191,7 +200,12 @@ fn main() -> anyhow::Result<()> {
   panic::set_hook(Box::new(|panic_info| {
     error!("PANIC: {}", panic_info);
     if let Some(location) = panic_info.location() {
-      error!("Location: {}:{}:{}", location.file(), location.line(), location.column());
+      error!(
+        "Location: {}:{}:{}",
+        location.file(),
+        location.line(),
+        location.column()
+      );
     }
     if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
       error!("Message: {}", s);
@@ -209,26 +223,27 @@ fn main() -> anyhow::Result<()> {
   })?;
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
-  
+
   let mut devices: HashMap<nusb::DeviceId, (u16, u16)> = HashMap::new();
 
   debug!("Enumerate all USB devices");
-  
+
   let device_list: Vec<nusb::DeviceInfo> = nusb::list_devices().wait()?.collect();
-    
+
   for info in device_list {
     let id = info.id();
     let vendor = info.vendor_id();
     let product = info.product_id();
-    let manufacturer_name = info.manufacturer_string().unwrap_or("Unknown Manufacturer"); 
+    let manufacturer_name = info.manufacturer_string().unwrap_or("Unknown Manufacturer");
     let device_name = info.product_string().unwrap_or("Unknown Product");
     let device_str = format!("{:04x}:{:04x}", vendor, product);
 
     devices.insert(id, (vendor, product));
 
-    debug!("{:?} {:?}: {}", manufacturer_name, device_name, device_str);
+    debug!("{:?} ({:?}): {}", device_name, manufacturer_name, device_str);
 
     if device_str == cfg.usb_device_id {
+      info!("Configured USB device {}, switching input to {}", device_str, cfg.system_one_input);
       if let Err(e) = set_input(cfg.system_one_input, cfg.ddc_alt) {
         error!("Failed to set initial input: {}", e);
       }
@@ -236,12 +251,10 @@ fn main() -> anyhow::Result<()> {
   }
 
   futures_lite::future::block_on(async {
-    let mut events = nusb::watch_devices()
-      .map_err(|e| {
-        error!("Failed to start USB device monitoring: {}", e);
-        anyhow::anyhow!("Failed to start USB device monitoring: {}", e)
-      })?;
-
+    let mut events = nusb::watch_devices().map_err(|e| {
+      error!("Failed to start USB device monitoring: {}", e);
+      anyhow::anyhow!("Failed to start USB device monitoring: {}", e)
+    })?;
 
     while let Some(event) = events.next().await {
       match event {
@@ -282,7 +295,8 @@ fn main() -> anyhow::Result<()> {
 
     error!("USB device monitoring ended");
     Ok::<_, anyhow::Error>(())
-  }).map_err(|e| {
+  })
+  .map_err(|e| {
     error!("Error in USB device monitoring: {}", e);
     e
   })?;
