@@ -51,9 +51,29 @@ struct ResolvedConfig {
   ddc_alt: bool,
 }
 
+fn get_betterdisplay_path() -> PathBuf {
+  let out = Command::new("which")
+    .arg("betterdisplaycli")
+    .output()
+    .expect("Failed to execute 'which betterdisplaycli'");
+
+  if !out.status.success() {
+    error!(
+      "'which betterdisplaycli' failed with status: {}",
+      out.status
+    );
+    process::exit(1);
+  }
+
+  // convert out into a path buffer
+  return PathBuf::from(String::from_utf8_lossy(&out.stdout).trim());
+}
+
 fn set_input(input_code: u16, use_ddc_alt: bool) -> anyhow::Result<()> {
+  let betterdisplay_path = get_betterdisplay_path();
+
   // TODO: figure out how to make this path dynamic or configurable
-  let mut cmd = Command::new("/opt/homebrew/bin/betterdisplaycli");
+  let mut cmd = Command::new(betterdisplay_path);
   cmd.arg("set");
   if use_ddc_alt {
     cmd.arg("--ddcAlt");
@@ -124,6 +144,23 @@ fn load_config() -> anyhow::Result<ResolvedConfig> {
   Ok(cfg.with_defaults())
 }
 
+fn handle_launch_agent() -> anyhow::Result<()> {
+  info!("Installing launch agent since --install was passed...");
+  let mut agent = LaunchAgent::new("com.github.hacksore.betterdisplay-kvm");
+
+  // NOTE: the install.sh should move/link the bin here
+  agent.program_arguments = vec!["/usr/local/bin/betterdisplay-kvm".to_string()];
+  agent.run_at_load = true;
+  agent.keep_alive = true;
+
+  agent.write()?;
+  agent.bootstrap()?;
+
+  info!("Launch agent installed and started.");
+
+  process::exit(0);
+}
+
 fn main() -> anyhow::Result<()> {
   // Load config first to get the log level
   let cfg = load_config().map_err(|e| {
@@ -172,6 +209,11 @@ fn main() -> anyhow::Result<()> {
     )
     .start()?;
 
+  info!("betterdisplay-kvm starting...");
+
+  let betterdisplay_path = get_betterdisplay_path();
+  debug!("Found betterdisplaycli at: {:?}", betterdisplay_path);
+
   // Set up panic hook to capture panics and log them
   panic::set_hook(Box::new(|panic_info| {
     error!("PANIC: {}", panic_info);
@@ -190,24 +232,8 @@ fn main() -> anyhow::Result<()> {
     }
   }));
 
-  info!("betterdisplay-kvm starting...");
-
-  // if they pass a --install flag do this logic for the launch agent
   if std::env::args().any(|arg| arg == "--install") {
-    info!("Installing launch agent since --install was passed...");
-    let mut agent = LaunchAgent::new("com.github.hacksore.betterdisplay-kvm");
-
-    // TODO: figure out how to source the path for the bin
-    agent.program_arguments = vec!["/usr/local/bin/betterdisplay-kvm".to_string()];
-    agent.run_at_load = true;
-    agent.keep_alive = true;
-
-    agent.write()?;
-    agent.bootstrap()?;
-
-    info!("Launch agent installed and started.");
-
-    process::exit(0);
+    handle_launch_agent()?;
   }
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
