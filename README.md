@@ -1,7 +1,22 @@
 # BetterDisplay KVM
 
-A Rust-based KVM switch utility for BetterDisplay.
+A Rust-based KVM switch utility for BetterDisplay that utilizes the [`betterdisplaycli`](https://github.com/waydabber/betterdisplaycli).
 
+This works 
+
+## How it works
+
+This works by using the BetterDisplay app and CLI to issues commands to your monitor when a configured USB devices is detected. This uses the [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) protocols to send commands directly to your monitor.
+
+So with the single press of a button you can switch over to you gaming PC or macBook seamlessly.
+
+Diagram
+
+![diagram](./betterdisplay-kvm-diagram.png)
+
+## Why not use a KVM?
+
+Because they don’t support high refresh rates without spending an ungodly amount of money.
 
 ## Config
 
@@ -36,6 +51,6 @@ Run the `./uninstall.sh` and it remove the program and clean everything up.
 ### Roadmap
 - [x] add a config system so others can use it
 - [x] add some setup guide for adding a launch agent
+- [ ] fix the hardcoded bin to betterdisplaycli from homebrew
 - [ ] publish it to crates.io so you can just install from there
-- [ ] flaky: fix bug where audio interface on mac might not go back to correct one
-- [ ] optimize for performance somehow so this doesnt waste cpu cycles
+- [ ] codesign the bin for people wanting to use outside of homebrew
