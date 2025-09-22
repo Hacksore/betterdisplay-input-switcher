@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::{
   collections::HashMap,
   fs, panic,
-  path::PathBuf,
+  path::{Path, PathBuf},
   process::{self, Command},
 };
 
@@ -52,21 +52,39 @@ struct ResolvedConfig {
 }
 
 fn get_betterdisplay_path() -> PathBuf {
-  let out = Command::new("which")
-    .arg("betterdisplaycli")
-    .output()
-    .expect("Failed to execute 'which betterdisplaycli'");
-
-  if !out.status.success() {
-    error!(
-      "'which betterdisplaycli' failed with status: {}",
-      out.status
-    );
-    process::exit(1);
+  if let Ok(override_path) = std::env::var("BETTERDISPLAYCLI_PATH") {
+    let p = PathBuf::from(override_path);
+    if p.exists() {
+      return p;
+    }
   }
 
-  // convert out into a path buffer
-  return PathBuf::from(String::from_utf8_lossy(&out.stdout).trim());
+  let common_candidates = [
+    "/opt/homebrew/bin/betterdisplaycli",
+    "/usr/local/bin/betterdisplaycli",
+    "/usr/bin/betterdisplaycli",
+    "/bin/betterdisplaycli",
+  ];
+  for candidate in common_candidates {
+    let p = Path::new(candidate);
+    if p.exists() {
+      return p.to_path_buf();
+    }
+  }
+
+  if let Some(path_var) = std::env::var_os("PATH") {
+    for dir in std::env::split_paths(&path_var) {
+      let p = dir.join("betterdisplaycli");
+      if p.exists() {
+        return p;
+      }
+    }
+  }
+
+  error!(
+    "Could not locate 'betterdisplaycli'. Set BETTERDISPLAYCLI_PATH or install to /opt/homebrew/bin or /usr/local/bin."
+  );
+  process::exit(1);
 }
 
 fn set_input(input_code: u16, use_ddc_alt: bool) -> anyhow::Result<()> {

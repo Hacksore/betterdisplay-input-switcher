@@ -49,6 +49,6 @@ Run the `./uninstall.sh` and it remove the program and clean everything up.
 ### Roadmap
 - [x] add a config system so others can use it
 - [x] add some setup guide for adding a launch agent
-- [ ] fix the hardcoded bin to betterdisplaycli from homebrew
-- [ ] publish it to crates.io so you can just install from there
+- [x] fix the hardcoded bin to betterdisplaycli from homebrew
+- [x] publish it to crates.io so you can just install from there
 - [ ] codesign the bin for people wanting to use outside of homebrew
