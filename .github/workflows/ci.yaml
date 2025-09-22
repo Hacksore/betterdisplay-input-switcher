@@ -8,11 +8,11 @@ on:
 
 jobs:
   cargo-fmt:
-    name: Format
+    name: Cargo Format
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v4
-      - name: Install Rust stable
+      - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
         with:
           target: "${{ matrix.settings.toolchain }}"
@@ -21,7 +21,7 @@ jobs:
         run: cargo fmt --check
 
   build:
-    name: macOS
+    name: Build macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
