@@ -8,16 +8,10 @@ on:
 
 jobs:
   cargo-fmt:
-    name: Cargo Format
+    name: Format
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: changes
-        with:
-          filters: |
-            desktop:
-              - 'apps/desktop/**'
       - name: Install Rust stable
         if: steps.changes.outputs.desktop == 'true'
         uses: dtolnay/rust-toolchain@stable
@@ -33,13 +27,12 @@ jobs:
         working-directory: apps/desktop/src-tauri
 
   build:
-    name: Build macOS
+    name: macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
       - name: Install Rust stable
-        if: steps.changes.outputs.desktop == 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
           target: "${{ matrix.settings.toolchain }}"
