@@ -164,7 +164,7 @@ fn main() -> anyhow::Result<()> {
     .duplicate_to_stdout(Duplicate::All)
     .duplicate_to_stderr(Duplicate::Error)
     .format_for_stdout(flexi_logger::detailed_format)
-    .write_mode(WriteMode::BufferAndFlush)
+    .write_mode(WriteMode::Direct)
     .rotate(
       Criterion::Size(10_000_000),
       Naming::Timestamps,
@@ -201,16 +201,6 @@ fn main() -> anyhow::Result<()> {
     agent.program_arguments = vec!["/usr/local/bin/betterdisplay-kvm".to_string()];
     agent.run_at_load = true;
     agent.keep_alive = true;
-
-    // NOTE: these are if the program fails and can't use the flexi_logger
-    agent.standard_error_path = logs_dir
-      .join("betterdisplay-kvm.err")
-      .to_string_lossy()
-      .to_string();
-    agent.standard_out_path = logs_dir
-      .join("betterdisplay-kvm.out")
-      .to_string_lossy()
-      .to_string();
 
     agent.write()?;
     agent.bootstrap()?;
