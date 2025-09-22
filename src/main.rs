@@ -280,12 +280,10 @@ fn main() -> anyhow::Result<()> {
         HotplugEvent::Disconnected(id) => {
           if let Some((vendor, product)) = devices.remove(&id) {
             let device_str = format!("{:04x}:{:04x}", vendor, product);
-
-            error!("USB device disconnected: {}", device_str);
             debug!("Disconnected configured USB device: {}", device_str);
 
             if device_str == cfg.usb_device_id {
-              error!("Configured device disconnected, switching to system_two_input");
+              debug!("Configured device disconnected, switching to system_two_input");
               on_disconnect(&cfg);
             }
 
@@ -297,7 +295,6 @@ fn main() -> anyhow::Result<()> {
       }
     }
 
-    error!("USB device monitoring ended");
     Ok::<_, anyhow::Error>(())
   })
   .map_err(|e| {
