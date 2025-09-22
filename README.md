@@ -2,13 +2,11 @@
 
 A Rust-based KVM switch utility for BetterDisplay that utilizes the [`betterdisplaycli`](https://github.com/waydabber/betterdisplaycli).
 
-This works 
-
 ## How it works
 
-This works by using the BetterDisplay app and CLI to issues commands to your monitor when a configured USB devices is detected. This uses the [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) protocols to send commands directly to your monitor.
+This works by using the BetterDisplay app and CLI to issues commands to your monitor when a configured USB devices is connected/disconnected via the `betterdisplay-kvm` rust program. This uses the [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) protocols to send commands directly to your monitor.
 
-So with the single press of a button you can switch over to you gaming PC or macBook seamlessly.
+With the single press of a button you can switch over to you gaming PC or macBook seamlessly.
 
 Diagram
 
