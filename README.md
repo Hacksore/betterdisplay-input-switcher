@@ -2,13 +2,17 @@
 
 A Rust-based KVM switch utility for BetterDisplay that utilizes the [`betterdisplaycli`](https://github.com/waydabber/betterdisplaycli).
 
+## Bill of Materials (BOM)
+
+- USB peripheral switch (USB-only): https://a.co/d/dRZjOcX
+
 ## How it works
 
-This works by using the BetterDisplay app and CLI to issues commands to your monitor when a configured USB devices is connected/disconnected via the `betterdisplay-kvm` rust program. This uses the [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) protocols to send commands directly to your monitor.
+This works by using the BetterDisplay app and CLI to issue commands to your monitor when a configured USB device is connected or disconnected via the `betterdisplay-kvm` Rust program. It uses the [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) protocol to send commands directly to your monitor. 
 
-With the single press of a button you can switch over to you gaming PC or macBook seamlessly.
+With a single press of a button, you can switch to your gaming PC or MacBook seamlessly.
 
-Diagram
+## Diagram
 
 ![diagram](./betterdisplay-kvm-diagram.png)
 
@@ -19,36 +23,35 @@ Because they don’t support high refresh rates without spending an ungodly amou
 ## Config
 
 ```toml
-# the USB device you'd like watch for
+# the USB device you'd like to watch for
 usb_device_id = "046d:c547"
-# id that betterdisplaycli uses to configure input
+# ID that betterdisplaycli uses to configure input
 system_one_input = 15
-# id that betterdisplaycli uses to configure input
+# ID that betterdisplaycli uses to configure input
 system_two_input = 18
 # log level
 log_level = "debug"
-# if you use an lg monitor that doesnt follow the spec this might work if you enable it
+# if you use an LG monitor that doesn't follow the spec, this might work if you enable it
 ddc_alt = false
-
 ```
 
 ## Development
 
-```
+```bash
 RUST_LOG=debug cargo watch -x run
 ```
 
 ## Install
 
-Run the `./install.sh` and it will install a LaunchAgent and start the program.
+Run `./install.sh`, and it will install a LaunchAgent and start the program.
 
 ## Uninstall
 
-Run the `./uninstall.sh` and it remove the program and clean everything up.
+Run `./uninstall.sh`, and it will remove the program and clean everything up.
 
 ### Roadmap
-- [x] add a config system so others can use it
-- [x] add some setup guide for adding a launch agent
-- [x] fix the hardcoded bin to betterdisplaycli from homebrew
-- [x] publish it to crates.io so you can just install from there
-- [ ] codesign the bin for people wanting to use outside of homebrew
+- [x] Add a config system so others can use it
+- [x] Add a setup guide for adding a launch agent
+- [x] Fix the hardcoded bin path to `betterdisplaycli` from Homebrew
+- [x] Publish it to crates.io so you can install it from there
+- [ ] Codesign the binary for people who want to use it outside of Homebrew
