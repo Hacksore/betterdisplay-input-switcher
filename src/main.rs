@@ -53,7 +53,7 @@ struct ResolvedConfig {
 
 fn set_input(input_code: u16, use_ddc_alt: bool) -> anyhow::Result<()> {
   // TODO: figure out how to make this path dynamic or configurable
-  let mut cmd = Command::new("betterdisplaycli");
+  let mut cmd = Command::new("/opt/homebrew/bin/betterdisplaycli");
   cmd.arg("set");
   if use_ddc_alt {
     cmd.arg("--ddcAlt");
@@ -195,7 +195,6 @@ fn main() -> anyhow::Result<()> {
   // if they pass a --install flag do this logic for the launch agent
   if std::env::args().any(|arg| arg == "--install") {
     info!("Installing launch agent since --install was passed...");
-
     let mut agent = LaunchAgent::new("com.github.hacksore.betterdisplay-kvm");
 
     // TODO: figure out how to source the path for the bin
