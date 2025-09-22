@@ -2,6 +2,10 @@
 
 A Rust-based KVM switch utility for BetterDisplay that utilizes the [`betterdisplaycli`](https://github.com/waydabber/betterdisplaycli).
 
+## Bill of Materials (BOM)
+
+- USB peripheral switch (USB-only): https://a.co/d/dRZjOcX
+
 ## How it works
 
 This works by using the BetterDisplay app and CLI to issue commands to your monitor when a configured USB device is connected or disconnected via the `betterdisplay-kvm` Rust program. It uses the [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) protocol to send commands directly to your monitor. 
