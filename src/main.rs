@@ -87,7 +87,7 @@ fn on_disconnect(cfg: &ResolvedConfig) {
 }
 
 fn validate_environment() -> anyhow::Result<()> {
-  error!("Validating environment...");
+  debug!("Validating environment...");
   
   // Check if betterdisplaycli is available
   let output = Command::new("which")
@@ -97,7 +97,7 @@ fn validate_environment() -> anyhow::Result<()> {
   match output {
     Ok(result) => {
       if result.status.success() {
-        error!("betterdisplaycli found at: {}", String::from_utf8_lossy(&result.stdout).trim());
+        debug!("betterdisplaycli found at: {}", String::from_utf8_lossy(&result.stdout).trim());
       } else {
         error!("betterdisplaycli not found in PATH");
         return Err(anyhow::anyhow!("betterdisplaycli not found in PATH"));
@@ -109,10 +109,7 @@ fn validate_environment() -> anyhow::Result<()> {
     }
   }
   
-  // Check if we can access USB devices (this might require permissions)
-  error!("Checking USB access permissions...");
-  
-  error!("Environment validation completed");
+  debug!("Environment validation completed");
   Ok(())
 }
 
