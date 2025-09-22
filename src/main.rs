@@ -1,10 +1,16 @@
 use flexi_logger::{Cleanup, Criterion, Duplicate, FileSpec, Logger, Naming, WriteMode};
 use futures_lite::stream::StreamExt;
 use log::{debug, error, info};
+use lunchctl::{LaunchAgent, LaunchControllable};
 use nusb::MaybeFuture;
 use nusb::hotplug::HotplugEvent;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs, panic, path::PathBuf, process::Command};
+use std::{
+  collections::HashMap,
+  fs, panic,
+  path::PathBuf,
+  process::{self, Command},
+};
 
 pub const DEFAULT_DEVICE_ID: &str = "046d:c547";
 
@@ -46,7 +52,8 @@ struct ResolvedConfig {
 }
 
 fn set_input(input_code: u16, use_ddc_alt: bool) -> anyhow::Result<()> {
-  let mut cmd = Command::new("/opt/homebrew/bin/betterdisplaycli");
+  // TODO: figure out how to make this path dynamic or configurable
+  let mut cmd = Command::new("betterdisplaycli");
   cmd.arg("set");
   if use_ddc_alt {
     cmd.arg("--ddcAlt");
@@ -89,37 +96,6 @@ fn on_disconnect(cfg: &ResolvedConfig) {
   if let Err(e) = set_input(cfg.system_two_input, cfg.ddc_alt) {
     error!("Failed to set input on disconnect: {}", e);
   }
-}
-
-fn validate_environment() -> anyhow::Result<()> {
-  debug!("Validating environment...");
-
-  // Check if betterdisplaycli is available
-  let output = Command::new("which").arg("betterdisplaycli").output();
-
-  match output {
-    Ok(result) => {
-      if result.status.success() {
-        debug!(
-          "betterdisplaycli found at: {}",
-          String::from_utf8_lossy(&result.stdout).trim()
-        );
-      } else {
-        error!("betterdisplaycli not found in PATH");
-        return Err(anyhow::anyhow!("betterdisplaycli not found in PATH"));
-      }
-    }
-    Err(e) => {
-      error!("Failed to check for betterdisplaycli: {}", e);
-      return Err(anyhow::anyhow!(
-        "Failed to check for betterdisplaycli: {}",
-        e
-      ));
-    }
-  }
-
-  debug!("Environment validation completed");
-  Ok(())
 }
 
 fn load_config() -> anyhow::Result<ResolvedConfig> {
@@ -216,11 +192,34 @@ fn main() -> anyhow::Result<()> {
 
   info!("betterdisplay-kvm starting...");
 
-  // Now validate environment with proper logging
-  validate_environment().map_err(|e| {
-    error!("Environment validation failed: {}", e);
-    e
-  })?;
+  // if they pass a --install flag do this logic for the launch agent
+  if std::env::args().any(|arg| arg == "--install") {
+    info!("Installing launch agent since --install was passed...");
+
+    let mut agent = LaunchAgent::new("com.github.hacksore.betterdisplay-kvm");
+
+    // TODO: figure out how to source the path for the bin
+    agent.program_arguments = vec!["/usr/local/bin/betterdisplay-kvm".to_string()];
+    agent.run_at_load = true;
+    agent.keep_alive = true;
+
+    // NOTE: these are if the program fails and can't use the flexi_logger
+    agent.standard_error_path = logs_dir
+      .join("betterdisplay-kvm.err")
+      .to_string_lossy()
+      .to_string();
+    agent.standard_out_path = logs_dir
+      .join("betterdisplay-kvm.out")
+      .to_string_lossy()
+      .to_string();
+
+    agent.write()?;
+    agent.bootstrap()?;
+
+    info!("Launch agent installed and started.");
+
+    process::exit(0);
+  }
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
 
@@ -240,10 +239,16 @@ fn main() -> anyhow::Result<()> {
 
     devices.insert(id, (vendor, product));
 
-    debug!("{:?} ({:?}): {}", device_name, manufacturer_name, device_str);
+    debug!(
+      "{:?} ({:?}): {}",
+      device_name, manufacturer_name, device_str
+    );
 
     if device_str == cfg.usb_device_id {
-      info!("Configured USB device {}, switching input to {}", device_str, cfg.system_one_input);
+      info!(
+        "Configured USB device {}, switching input to {}",
+        device_str, cfg.system_one_input
+      );
       if let Err(e) = set_input(cfg.system_one_input, cfg.ddc_alt) {
         error!("Failed to set initial input: {}", e);
       }

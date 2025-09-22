@@ -13,8 +13,6 @@ BUILD_BIN="target/release/${BIN_NAME}"
 LIBEXEC_DIR="/usr/local/libexec/${BIN_NAME}"
 INSTALL_BIN="${LIBEXEC_DIR}/${BIN_NAME}"
 USR_LOCAL_BIN="/usr/local/bin/${BIN_NAME}"
-PLIST_SRC="config/com.github.hacksore.betterdisplay-kvm.plist"
-PLIST_DEST="${HOME}/Library/LaunchAgents/com.github.hacksore.betterdisplay-kvm.plist"
 
 # building in release mode is recommended
 cargo build --release
@@ -31,23 +29,14 @@ sudo mkdir -p "${LIBEXEC_DIR}"
 
 echo "==> Copying binary to ${INSTALL_BIN}"
 sudo cp "${BUILD_BIN}" "${INSTALL_BIN}"
-sudo chmod 755 "${INSTALL_BIN}"
+sudo chmod 777 "${INSTALL_BIN}"
 
 echo "==> Creating symlink ${USR_LOCAL_BIN} -> ${INSTALL_BIN} (if missing)"
 if [[ ! -e "${USR_LOCAL_BIN}" ]]; then
   sudo ln -s "${INSTALL_BIN}" "${USR_LOCAL_BIN}"
 fi
 
-echo "==> Installing LaunchAgent plist to ${PLIST_DEST}"
-mkdir -p "${HOME}/Library/LaunchAgents"
-cp "${PLIST_SRC}" "${PLIST_DEST}"
+# run the thing with a --install flag that will exit after it configures the launch
+./target/release/betterdisplay-kvm --install
 
-echo "==> (Re)loading LaunchAgent"
-# Try to unload first; ignore errors if not loaded yet
-launchctl unload -w "${PLIST_DEST}" >/dev/null 2>&1 || true
-launchctl load -w "${PLIST_DEST}"
-
-echo "==> Done. Service label: com.github.hacksore.betterdisplay-kvm"
-echo "    Logs: ~/Library/Logs/betterdisplay-kvm.{out,err}.log"
-echo "    Binary: ${INSTALL_BIN} (symlink at ${USR_LOCAL_BIN})"
-
+echo "done"
