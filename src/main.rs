@@ -16,13 +16,26 @@ use utils::{
 #[command(name = "betterdisplay-kvm")]
 #[command(about = "A KVM switch for BetterDisplay")]
 #[command(version)]
+#[command(long_about = "BetterDisplay KVM Switch
+
+A daemon that monitors USB device connections and automatically switches
+BetterDisplay input sources based on configured USB device events.
+
+This tool requires the --launch flag to run as a long-lived daemon that
+monitors USB devices. Use --install to set up the launch agent.")]
 struct Cli {
-  /// Install the launch agent
-  #[arg(long)]
+  /// Install the launch agent for automatic startup
+  #[arg(
+    long,
+    help = "Install the macOS launch agent to automatically start the daemon"
+  )]
   install: bool,
 
   /// Run as a long-lived daemon (required for normal operation)
-  #[arg(long)]
+  #[arg(
+    long,
+    help = "Run as a daemon to monitor USB devices and switch inputs"
+  )]
   launch: bool,
 }
 
@@ -37,10 +50,16 @@ fn main() -> anyhow::Result<()> {
 
   // Check if launch flag is provided for long-lived execution
   if !cli.launch {
-    eprintln!("Error: --launch flag is required for normal operation");
-    eprintln!("This program needs to run as a long-lived daemon to monitor USB devices");
-    eprintln!("Use --help for more information");
-    std::process::exit(1);
+    eprintln!("BetterDisplay KVM Switch");
+    eprintln!();
+    eprintln!("This program needs to run as a long-lived daemon to monitor USB devices.");
+    eprintln!("Use --launch to start the daemon or --help for more information.");
+    eprintln!();
+    eprintln!("Quick start:");
+    eprintln!("  betterdisplay-kvm --install  # Install launch agent");
+    eprintln!("  betterdisplay-kvm --launch   # Run daemon manually");
+    eprintln!("  betterdisplay-kvm --help     # Show detailed help");
+    return Ok(());
   }
 
   // Load config first to get the log level
