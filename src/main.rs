@@ -1,6 +1,6 @@
 mod utils;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use futures_lite::stream::StreamExt;
 use log::{debug, error, info};
 use nusb::MaybeFuture;
@@ -50,15 +50,11 @@ fn main() -> anyhow::Result<()> {
 
   // Check if launch flag is provided for long-lived execution
   if !cli.launch {
-    eprintln!("BetterDisplay KVM Switch");
+    // Use clap's built-in help functionality
+    let mut cmd = Cli::command();
+    cmd.print_help()?;
     eprintln!();
-    eprintln!("This program needs to run as a long-lived daemon to monitor USB devices.");
-    eprintln!("Use --launch to start the daemon or --help for more information.");
-    eprintln!();
-    eprintln!("Quick start:");
-    eprintln!("  betterdisplay-kvm --install  # Install launch agent");
-    eprintln!("  betterdisplay-kvm --launch   # Run daemon manually");
-    eprintln!("  betterdisplay-kvm --help     # Show detailed help");
+    eprintln!("Note: This program requires --launch to run as a daemon.");
     return Ok(());
   }
 
