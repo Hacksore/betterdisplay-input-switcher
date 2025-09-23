@@ -1,5 +1,6 @@
 mod utils;
 
+use clap::Parser;
 use futures_lite::stream::StreamExt;
 use log::{debug, error, info};
 use nusb::MaybeFuture;
@@ -10,7 +11,38 @@ use utils::{
   setup_logger,
 };
 
+/// A KVM switch for BetterDisplay
+#[derive(Parser, Debug)]
+#[command(name = "betterdisplay-kvm")]
+#[command(about = "A KVM switch for BetterDisplay")]
+#[command(version)]
+struct Cli {
+  /// Install the launch agent
+  #[arg(long)]
+  install: bool,
+
+  /// Run as a long-lived daemon (required for normal operation)
+  #[arg(long)]
+  launch: bool,
+}
+
 fn main() -> anyhow::Result<()> {
+  let cli = Cli::parse();
+
+  // Handle install flag
+  if cli.install {
+    handle_launch_agent()?;
+    return Ok(());
+  }
+
+  // Check if launch flag is provided for long-lived execution
+  if !cli.launch {
+    eprintln!("Error: --launch flag is required for normal operation");
+    eprintln!("This program needs to run as a long-lived daemon to monitor USB devices");
+    eprintln!("Use --help for more information");
+    std::process::exit(1);
+  }
+
   // Load config first to get the log level
   let cfg = load_config().map_err(|e| {
     eprintln!("Failed to load config: {}", e);
@@ -42,10 +74,6 @@ fn main() -> anyhow::Result<()> {
       error!("Message: {}", s);
     }
   }));
-
-  if std::env::args().any(|arg| arg == "--install") {
-    handle_launch_agent()?;
-  }
 
   debug!("Starting betterdisplay-kvm with config: {:?}", cfg);
 

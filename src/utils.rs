@@ -163,7 +163,10 @@ pub fn handle_launch_agent() -> anyhow::Result<()> {
   let mut agent = LaunchAgent::new("com.github.hacksore.betterdisplay-kvm");
 
   // NOTE: the install.sh should move/link the bin here
-  agent.program_arguments = vec!["/usr/local/bin/betterdisplay-kvm".to_string()];
+  agent.program_arguments = vec![
+    "/usr/local/bin/betterdisplay-kvm".to_string(),
+    String::from("--launch"),
+  ];
   agent.run_at_load = true;
   agent.keep_alive = true;
 
