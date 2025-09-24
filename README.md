@@ -4,7 +4,9 @@ A Rust-based KVM switch utility for BetterDisplay that utilizes the [`betterdisp
 
 ## Bill of Materials (BOM)
 
-- USB peripheral switch (USB-only): https://a.co/d/dRZjOcX
+- Mac
+- [USB peripheral switch](https://a.co/d/dRZjOcX)
+- Monitor supporting [DDC/CI](https://en.wikipedia.org/wiki/Display_Data_Channel) 
 
 ## How it works
 
@@ -22,6 +24,8 @@ Because they don’t support high refresh rates without spending an ungodly amou
 
 ## Config
 
+This config lives in `~/.config/betterdisplay-kvm/config.toml`.
+
 ```toml
 # the USB device you'd like to watch for
 usb_device_id = "046d:c547"
@@ -38,7 +42,7 @@ ddc_alt = false
 ## Development
 
 ```bash
-RUST_LOG=debug cargo watch -x run
+RUST_LOG=debug cargo watch -x "run -- --launch"
 ```
 
 ## Install
@@ -49,9 +53,3 @@ Run `./install.sh`, and it will install a LaunchAgent and start the program.
 
 Run `./uninstall.sh`, and it will remove the program and clean everything up.
 
-### Roadmap
-- [x] Add a config system so others can use it
-- [x] Add a setup guide for adding a launch agent
-- [x] Fix the hardcoded bin path to `betterdisplaycli` from Homebrew
-- [x] Publish it to crates.io so you can install it from there
-- [ ] Codesign the binary for people who want to use it outside of Homebrew
